@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
+
+  static bool vibration = true;
+  static bool sound = true;
+  static bool notification = true;
 
   static int pomodoro = 25;
   static int shortBreak = 5;
@@ -12,34 +17,166 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
 
-  final pomoController =
-      TextEditingController(text: SettingsScreen.pomodoro.toString());
+  late TextEditingController pomoController;
+  late TextEditingController shortController;
+  late TextEditingController longController;
 
-  final shortController =
-      TextEditingController(text: SettingsScreen.shortBreak.toString());
+  bool vibration = true;
+  bool sound = true;
+  bool notification = true;
 
-  final longController =
-      TextEditingController(text: SettingsScreen.longBreak.toString());
+  @override
+  void initState() {
+    super.initState();
+    loadSettings();
+  }
 
-  save() {
+  /// LOAD SETTINGS
+  Future loadSettings() async {
 
-    SettingsScreen.pomodoro = int.parse(pomoController.text);
-    SettingsScreen.shortBreak = int.parse(shortController.text);
-    SettingsScreen.longBreak = int.parse(longController.text);
+    final prefs = await SharedPreferences.getInstance();
+
+    vibration = prefs.getBool("vibration") ?? true;
+    sound = prefs.getBool("sound") ?? true;
+    notification = prefs.getBool("notification") ?? true;
+
+    int pomo = prefs.getInt("pomodoro") ?? 25;
+    int shortB = prefs.getInt("shortBreak") ?? 5;
+    int longB = prefs.getInt("longBreak") ?? 15;
+
+    SettingsScreen.pomodoro = pomo;
+    SettingsScreen.shortBreak = shortB;
+    SettingsScreen.longBreak = longB;
+
+    pomoController = TextEditingController(text: pomo.toString());
+    shortController = TextEditingController(text: shortB.toString());
+    longController = TextEditingController(text: longB.toString());
+
+    setState(() {});
+  }
+
+  /// SAVE SETTINGS
+  Future saveSettings() async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+    int pomo = int.tryParse(pomoController.text) ?? 25;
+    int shortB = int.tryParse(shortController.text) ?? 5;
+    int longB = int.tryParse(longController.text) ?? 15;
+
+    await prefs.setInt("pomodoro", pomo);
+    await prefs.setInt("shortBreak", shortB);
+    await prefs.setInt("longBreak", longB);
+
+    await prefs.setBool("vibration", vibration);
+    await prefs.setBool("sound", sound);
+    await prefs.setBool("notification", notification);
+
+    SettingsScreen.pomodoro = pomo;
+    SettingsScreen.shortBreak = shortB;
+    SettingsScreen.longBreak = longB;
+
+    SettingsScreen.vibration = vibration;
+    SettingsScreen.sound = sound;
+    SettingsScreen.notification = notification;
 
     Navigator.pop(context);
   }
 
-  @override
-  void dispose() {
-    pomoController.dispose();
-    shortController.dispose();
-    longController.dispose();
-    super.dispose();
+  Widget toggleItem(String title, bool value, Function(bool) onChanged) {
+
+    return Container(
+
+      margin: const EdgeInsets.only(bottom: 16),
+
+      padding: const EdgeInsets.all(18),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10
+          )
+        ]
+      ),
+
+      child: Row(
+
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+        children: [
+
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold
+            ),
+          ),
+
+          Switch(
+            value: value,
+            onChanged: (v){
+              onChanged(v);
+            },
+          )
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+  Widget timeField(String label, IconData icon, TextEditingController controller) {
+
+    return Container(
+
+      margin: const EdgeInsets.only(bottom: 16),
+
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10
+          )
+        ]
+      ),
+
+      child: TextField(
+
+        controller: controller,
+        keyboardType: TextInputType.number,
+
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12)
+          )
+        ),
+
+      ),
+
+    );
+
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if (!mounted || pomoController == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
 
@@ -52,83 +189,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       body: SingleChildScrollView(
 
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
 
         child: Column(
 
           children: [
 
-            /// SETTINGS CARD
-            Container(
-
-              padding: const EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 15,
-                    offset: Offset(0,5)
-                  )
-                ]
-              ),
-
-              child: Column(
-
-                children: [
-
-                  /// POMODORO
-                  TextField(
-                    controller: pomoController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: "Pomodoro Minutes",
-                      prefixIcon: const Icon(Icons.timer),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)
-                      )
-                    ),
-                  ),
-
-                  const SizedBox(height:20),
-
-                  /// SHORT BREAK
-                  TextField(
-                    controller: shortController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: "Short Break Minutes",
-                      prefixIcon: const Icon(Icons.free_breakfast),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)
-                      )
-                    ),
-                  ),
-
-                  const SizedBox(height:20),
-
-                  /// LONG BREAK
-                  TextField(
-                    controller: longController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: "Long Break Minutes",
-                      prefixIcon: const Icon(Icons.hotel),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)
-                      )
-                    ),
-                  ),
-
-                ],
-
-              ),
-
+            /// TIME SETTINGS
+            timeField(
+              "Pomodoro Minutes",
+              Icons.timer,
+              pomoController,
             ),
 
-            const SizedBox(height:30),
+            timeField(
+              "Short Break Minutes",
+              Icons.free_breakfast,
+              shortController,
+            ),
+
+            timeField(
+              "Long Break Minutes",
+              Icons.hotel,
+              longController,
+            ),
+
+            const SizedBox(height:20),
+
+            /// SOUND
+            toggleItem(
+              "Sound",
+              sound,
+              (v){
+                setState(() {
+                  sound = v;
+                });
+              },
+            ),
+
+            /// VIBRATION
+            toggleItem(
+              "Vibration",
+              vibration,
+              (v){
+                setState(() {
+                  vibration = v;
+                });
+              },
+            ),
+
+            /// NOTIFICATION
+            toggleItem(
+              "Notification",
+              notification,
+              (v){
+                setState(() {
+                  notification = v;
+                });
+              },
+            ),
+
+            const SizedBox(height:20),
 
             /// SAVE BUTTON
             SizedBox(
@@ -137,7 +258,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               child: ElevatedButton(
 
-                onPressed: save,
+                onPressed: saveSettings,
 
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical:16),
@@ -154,31 +275,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
             ),
-
-            const SizedBox(height:30),
-
-            /// POMODORO NOTE
-            Container(
-
-              padding: const EdgeInsets.all(16),
-
-              child: const Text(
-
-                "Pomodoro Technique:\n\n"
-                "• 1 Pomodoro = 25 minutes of focused work.\n"
-                "• After each Pomodoro, take a short break (5 minutes).\n"
-                "• After completing 4 Pomodoros, take a long break (15 minutes).\n\n"
-                "This technique helps maintain focus while preventing burnout.",
-
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  height: 1.5
-                ),
-
-              ),
-
-            )
 
           ],
 

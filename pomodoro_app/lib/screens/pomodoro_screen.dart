@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../services/api_service.dart';
 import 'settings_screen.dart';
+import '../services/notification_service.dart';
+import 'package:vibration/vibration.dart';
 
 class PomodoroScreen extends StatefulWidget {
   final List<Task> tasks;
@@ -31,11 +33,16 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
 
   Timer? timer;
 
-  @override
+@override
   void initState() {
-    super.initState();
-    timeLeft = SettingsScreen.pomodoro * 60;
-  }
+  super.initState();
+  timeLeft = SettingsScreen.pomodoro * 60;
+
+  // TEST Thông báo
+  // Future.delayed(Duration(seconds: 3), () {
+  //   NotificationService().showNotification();
+  // });
+}
 
   /// START TIMER
   void startTimer() {
@@ -117,8 +124,24 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
 
   }
 
+  Future notifyFinish() async {
+
+  if (SettingsScreen.notification) {
+    await NotificationService().showNotification();
+  }
+
+  if (SettingsScreen.vibration) {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 500);
+    }
+  }
+
+}
+
   /// HANDLE FINISH
   Future handleFinish() async {
+
+    await notifyFinish();
 
     /// BREAK FINISHED
     if (isBreak) {

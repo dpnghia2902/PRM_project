@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.init();
+
   runApp(MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -15,4 +22,5 @@ class MyApp extends StatelessWidget {
       home: LoginScreen(),
     );
   }
+
 }

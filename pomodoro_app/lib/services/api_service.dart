@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -191,7 +192,7 @@ class ApiService {
   Future getProfile() async {
 
   final response = await http.get(
-    Uri.parse("$baseUrl/user/profile"),
+    Uri.parse("$baseUrl/users/profile"),
     headers: await authHeader(),
   );
 
@@ -202,7 +203,7 @@ class ApiService {
 Future updateProfile(String fullName, String gender) async {
 
   final response = await http.put(
-    Uri.parse("$baseUrl/user/profile"),
+    Uri.parse("$baseUrl/users/profile"),
     headers: await authHeader(),
     body: jsonEncode({
       "fullName": fullName,
@@ -212,6 +213,97 @@ Future updateProfile(String fullName, String gender) async {
 
   return jsonDecode(response.body);
 
+}
+
+  /// UPLOAD AVATAR
+Future uploadAvatar(File image, String userId) async {
+
+  String? token = await getToken();
+
+  var request = http.MultipartRequest(
+    "PUT",
+    Uri.parse("$baseUrl/users/$userId/avatar")
+  );
+
+  request.headers["Authorization"] = "Bearer $token";
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      "avatar",
+      image.path
+    )
+  );
+
+  var response = await request.send();
+
+  var res = await http.Response.fromStream(response);
+
+  return jsonDecode(res.body);
+}
+
+/// GET NOTES
+Future<List> getNotes() async {
+
+  final token = await getToken();
+
+  final res = await http.get(
+    Uri.parse("$baseUrl/notes"),
+    headers: {
+      "Content-Type":"application/json",
+      "Authorization":"Bearer $token"
+    },
+  );
+
+  return jsonDecode(res.body);
+}
+
+/// CREATE NOTE
+Future createNote(String title,String content) async {
+
+  final token = await getToken();
+
+  await http.post(
+    Uri.parse("$baseUrl/notes"),
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer $token"
+    },
+    body: jsonEncode({
+      "title":title,
+      "content":content
+    })
+  );
+}
+
+/// UPDATE NOTE
+Future updateNote(String id,String title,String content) async {
+
+  final token = await getToken();
+
+  await http.put(
+    Uri.parse("$baseUrl/notes/$id"),
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer $token"
+    },
+    body: jsonEncode({
+      "title":title,
+      "content":content
+    })
+  );
+}
+
+/// DELETE NOTE
+Future deleteNote(String id) async {
+
+  final token = await getToken();
+
+  await http.delete(
+    Uri.parse("$baseUrl/notes/$id"),
+    headers:{
+      "Authorization":"Bearer $token"
+    },
+  );
 }
 
 }

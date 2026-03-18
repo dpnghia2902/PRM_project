@@ -1,9 +1,42 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import 'task_screen.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
+import 'notes_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  final ApiService api = ApiService();
+
+  String? avatar;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  loadProfile() async {
+
+    try {
+
+      var data = await api.getProfile();
+
+      setState(() {
+        avatar = data["avatar"];
+      });
+
+    } catch(e){
+      print(e);
+    }
+
+  }
 
   Widget buildButton({
     required IconData icon,
@@ -20,13 +53,6 @@ class HomeScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              offset: Offset(0,4),
-            )
-          ]
         ),
 
         child: Column(
@@ -35,21 +61,11 @@ class HomeScreen extends StatelessWidget {
 
           children: [
 
-            Icon(
-              icon,
-              size: 40,
-              color: Colors.redAccent,
-            ),
+            Icon(icon,size:40,color:Colors.redAccent),
 
             const SizedBox(height:12),
 
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize:16,
-                fontWeight: FontWeight.w600
-              ),
-            )
+            Text(title)
 
           ],
 
@@ -58,6 +74,16 @@ class HomeScreen extends StatelessWidget {
       ),
 
     );
+
+  }
+
+  ImageProvider getAvatar(){
+
+    if(avatar != null){
+      return NetworkImage("http://192.168.1.101:5000$avatar");
+    }
+
+    return const NetworkImage("https://i.pravatar.cc/150");
 
   }
 
@@ -73,34 +99,35 @@ class HomeScreen extends StatelessWidget {
         title: const Text("Pomodoro"),
         centerTitle: true,
 
-        /// AVATAR GÓC PHẢI
         actions: [
 
           Padding(
 
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right:12),
 
             child: GestureDetector(
 
-              onTap: (){
-                Navigator.push(
+              onTap: () async {
+
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => ProfileScreen(),
                   ),
                 );
+
+                loadProfile(); // reload avatar
+
               },
 
-              child: const CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage(
-                  "https://i.pravatar.cc/150?img=3"
-                ),
+              child: CircleAvatar(
+                radius:18,
+                backgroundImage: getAvatar(),
               ),
 
             ),
 
-          ),
+          )
 
         ],
 
@@ -118,7 +145,6 @@ class HomeScreen extends StatelessWidget {
 
           children: [
 
-            /// START
             buildButton(
               icon: Icons.timer,
               title: "Start",
@@ -132,7 +158,6 @@ class HomeScreen extends StatelessWidget {
               },
             ),
 
-            /// PROFILE
             buildButton(
               icon: Icons.person,
               title: "Profile",
@@ -146,7 +171,19 @@ class HomeScreen extends StatelessWidget {
               },
             ),
 
-            /// SETTINGS
+            buildButton(
+              icon: Icons.note,
+              title: "Notes",
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NotesScreen(),
+                  ),
+                );
+              },
+            ),
+
             buildButton(
               icon: Icons.settings,
               title: "Settings",
