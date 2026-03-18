@@ -276,42 +276,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// WEEK TABLE
-  Widget buildWeekTable(){
+Widget buildWeekTable(){
 
-    List days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  List days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-    return Column(
+  return Column(
 
-      children: [
+    children: [
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: days.map((d)=>Text(d)).toList(),
-        ),
+      /// DAY ROW
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: days.map((d)=>Text(
+          d,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        )).toList(),
+      ),
 
-        const SizedBox(height:10),
+      const SizedBox(height:10),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: weekStats.map((p){
+      /// POMODORO ROW
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: weekStats.map((p){
 
-            String tomatoes = "🍅" * p;
+          return Row(
 
-            if(tomatoes.isEmpty){
-              tomatoes = "-";
-            }
+            children: [
 
-            return Text(tomatoes);
+              Text(
+                "$p",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16
+                ),
+              ),
 
-          }).toList(),
-        )
+              const SizedBox(width:3),
 
-      ],
+              const Text("🍅")
 
-    );
+            ],
 
-  }
+          );
 
+        }).toList(),
+      )
+
+    ],
+
+  );
+
+}
   @override
   void dispose() {
     nameController.dispose();
