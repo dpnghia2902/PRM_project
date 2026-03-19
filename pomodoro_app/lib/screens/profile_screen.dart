@@ -347,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? FileImage(avatar!)
                                   : avatarUrl != null && avatarUrl!.isNotEmpty
                                       ? NetworkImage(
-                                          "http://192.168.1.101:5000$avatarUrl",
+                                          "http://138.252.133.79:5000$avatarUrl",
                                         )
                                       : const NetworkImage(
                                           "https://i.pravatar.cc/150",

@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ImageProvider getAvatar() {
     if (avatar != null) {
-      return NetworkImage("http://192.168.1.101:5000$avatar");
+      return NetworkImage("http://138.252.133.79:5000$avatar");
     }
     return const NetworkImage("https://i.pravatar.cc/150");
   }

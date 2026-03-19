@@ -217,6 +217,7 @@ Future updateProfile(String fullName, String gender) async {
 
   /// UPLOAD AVATAR
 Future uploadAvatar(File image, String userId) async {
+
   String? token = await getToken();
 
   var request = http.MultipartRequest(
@@ -227,26 +228,17 @@ Future uploadAvatar(File image, String userId) async {
   request.headers["Authorization"] = "Bearer $token";
 
   request.files.add(
-    await http.MultipartFile.fromPath("avatar", image.path)
+    await http.MultipartFile.fromPath(
+      "avatar",
+      image.path
+    )
   );
 
   var response = await request.send();
+
   var res = await http.Response.fromStream(response);
 
-  print("Upload status: ${res.statusCode}");
-  print("Upload body: ${res.body}"); // debug server trả gì
-
-  // Nếu server trả JSON mới decode
-  if (res.statusCode == 200) {
-    try {
-      return jsonDecode(res.body);
-    } catch (e) {
-      print("JSON decode failed: $e");
-      return res.body; // trả nguyên body nếu không phải JSON
-    }
-  } else {
-    throw Exception("Upload failed: ${res.statusCode}");
-  }
+  return jsonDecode(res.body);
 }
 
 /// GET NOTES
