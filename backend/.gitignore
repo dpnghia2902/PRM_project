@@ -15,8 +15,6 @@ pids
 *.pid.lock
 
 # dotenv environment variables
-.env.*
-!.env.example
 
 # Build / dist
 dist/
