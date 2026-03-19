@@ -21,9 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   int todayPomo = 0;
   int focusMinutes = 0;
-
-  /// Mon -> Sun
-  List weekStats = [0, 0, 0, 0, 0, 0, 0];
+  List<int> weekStats = [0, 0, 0, 0, 0, 0, 0];
 
   final picker = ImagePicker();
 
@@ -35,28 +33,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// LOAD PROFILE
-  loadProfile() async {
+  Future<void> loadProfile() async {
     try {
       var data = await api.getProfile();
-
-    setState(() {
-
-      userId = data["_id"];   // thêm dòng này
-      nameController.text = data["fullName"] ?? "";
-      gender = data["gender"] ?? "male";
-      avatarUrl = data["avatar"];
-
-    });
-
-      print(data);
-      print(data["avatar"]);
+      setState(() {
+        userId = data["_id"];
+        nameController.text = data["fullName"] ?? "";
+        gender = data["gender"] ?? "male";
+        avatarUrl = data["avatar"];
+      });
     } catch (e) {
       print("Load profile error: $e");
     }
   }
 
   /// LOAD STATISTICS
-  loadStats() async {
+  Future<void> loadStats() async {
     try {
       var today = await api.getTodayStats();
       var week = await api.getWeekStats();
@@ -65,10 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         todayPomo = today["totalPomodoro"] ?? 0;
         focusMinutes = today["focusMinutes"] ?? 0;
 
-        /// backend: Sun -> Sat
         List data = week["week"] ?? [0, 0, 0, 0, 0, 0, 0];
-
-        /// convert to Mon -> Sun
         weekStats = [
           data[1],
           data[2],
@@ -85,9 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// PICK AVATAR
-  Future pickImage() async {
+  Future<void> pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
-
     if (picked != null) {
       File file = File(picked.path);
 
@@ -97,7 +85,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       try {
         var res = await api.uploadAvatar(file, userId!);
-
         setState(() {
           avatarUrl = res["avatar"];
         });
@@ -111,59 +98,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String focusTime() {
     int h = focusMinutes ~/ 60;
     int m = focusMinutes % 60;
-
     return "${h}h ${m}m";
   }
 
-  /// PROFILE INFO
+  /// PROFILE INFO (UI đẹp hơn)
   Widget buildProfileInfo() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "Profile Information",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.onSurface,
+              ),
             ),
-
-            ElevatedButton(
-              onPressed: () async {
-                if (isEditing) {
-                  await api.updateProfile(nameController.text, gender);
-                }
-
-                setState(() {
-                  isEditing = !isEditing;
-                });
-              },
-
-              child: Text(isEditing ? "Save" : "Edit"),
+            SizedBox(
+              height: 32,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                onPressed: () async {
+                  if (isEditing) {
+                    await api.updateProfile(nameController.text, gender);
+                  }
+                  setState(() {
+                    isEditing = !isEditing;
+                  });
+                },
+                child: Text(isEditing ? "Save" : "Edit"),
+              ),
             ),
           ],
         ),
+        const SizedBox(height: 16),
 
-        const SizedBox(height: 20),
-
+        // Full Name
         TextField(
           controller: nameController,
           enabled: isEditing,
-
           decoration: InputDecoration(
             labelText: "Full Name",
+            hintText: "Enter your name",
+            labelStyle: TextStyle(
+              color: colors.onSurface.withOpacity(0.7),
+            ),
+            prefixIcon: Icon(
+              Icons.person,
+              color: colors.primary,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colors.primary.withOpacity(0.2),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colors.primary.withOpacity(0.2),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colors.primary,
+                width: 2,
+              ),
+            ),
+          ),
+          style: const TextStyle(fontSize: 15),
+        ),
+        const SizedBox(height: 16),
 
-            prefixIcon: const Icon(Icons.person),
-
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        // Gender
+        Text(
+          "Gender",
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: colors.onSurface,
           ),
         ),
-
-        const SizedBox(height: 20),
-
-        const Text("Gender", style: TextStyle(fontWeight: FontWeight.w600)),
-
         const SizedBox(height: 8),
 
         Row(
@@ -180,23 +209,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Icon(
                     Icons.male,
-                    color: gender == "male" ? Colors.blue : Colors.grey,
+                    color: gender == "male" ? colors.primary : Colors.grey,
                   ),
-
-                  const SizedBox(width: 5),
-
+                  const SizedBox(width: 6),
                   Text(
                     "Male",
                     style: TextStyle(
-                      color: gender == "male" ? Colors.black : Colors.grey,
+                      color: gender == "male" ? colors.onSurface : Colors.grey[600],
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(width: 20),
-
             GestureDetector(
               onTap: isEditing
                   ? () {
@@ -211,13 +236,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Icons.female,
                     color: gender == "female" ? Colors.pink : Colors.grey,
                   ),
-
-                  const SizedBox(width: 5),
-
+                  const SizedBox(width: 6),
                   Text(
                     "Female",
                     style: TextStyle(
-                      color: gender == "female" ? Colors.black : Colors.grey,
+                      color: gender == "female" ? colors.onSurface : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -229,49 +252,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// WEEK TABLE
-  Widget buildWeekTable() {
-    List days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  /// TUẦN: mỗi ngày là 1 hàng ngang, hiển thị POMODORO
+  Widget buildWeekList() {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     return Column(
-      children: [
-        /// DAY ROW
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: days
-              .map(
-                (d) => Text(
-                  d,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+      children: List.generate(7, (index) {
+        final day = days[index];
+        final pomo = weekStats[index];
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colors.surface.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                day,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
                 ),
-              )
-              .toList(),
-        ),
-
-        const SizedBox(height: 10),
-
-        /// POMODORO ROW
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: weekStats.map((p) {
-            return Row(
-              children: [
-                Text(
-                  "$p",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+              ),
+              Row(
+                children: List.generate(
+                  pomo > 10 ? 10 : pomo, // giới hạn 10 quả táo nếu quá nhiều
+                  (appleIndex) => const Text("🍅"),
                 ),
-
-                const SizedBox(width: 3),
-
-                const Text("🍅"),
-              ],
-            );
-          }).toList(),
-        ),
-      ],
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -283,179 +303,179 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-
-      appBar: AppBar(title: const Text("Profile"), centerTitle: true),
-
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        title: Text(
+          "Profile",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: colors.onSurface.withOpacity(0.85),
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: colors.background.withOpacity(0.98),
+        elevation: 1,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         child: Column(
           children: [
-            /// PROFILE CARD
-            Container(
-              padding: const EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
+            // PROFILE CARD
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 15,
-                    offset: Offset(0, 5),
-                  ),
-                ],
               ),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 24, 16, 24),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool smallScreen = constraints.maxWidth < 360;
 
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  bool smallScreen = constraints.maxWidth < 360;
-
-                  /// SMALL SCREEN
-                  if (smallScreen) {
-                    return Column(
-                      children: [
-                        GestureDetector(
-                          onTap: isEditing ? pickImage : null,
-
-                          child: CircleAvatar(
-                            radius: 50,
-
-                            backgroundImage: avatar != null
-                                ? FileImage(avatar!)
-                                : (avatarUrl != null && avatarUrl!.isNotEmpty)
-                                ? NetworkImage(
-                                    "http://192.168.1.101:5000$avatarUrl",
-                                  )
-                                : const NetworkImage(
-                                    "https://i.pravatar.cc/150",
-                                  ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        const Text(
-                          "Change Avatar",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        buildProfileInfo(),
-                      ],
-                    );
-                  }
-
-                  /// NORMAL SCREEN
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      Expanded(child: buildProfileInfo()),
-
-                      const SizedBox(width: 20),
-
-                      Column(
+                    if (smallScreen) {
+                      return Column(
                         children: [
                           GestureDetector(
                             onTap: isEditing ? pickImage : null,
-
                             child: CircleAvatar(
-                              radius: 60,
-
+                              radius: 50,
                               backgroundImage: avatar != null
                                   ? FileImage(avatar!)
-                                  : const NetworkImage(
-                                          "https://i.pravatar.cc/150",
+                                  : avatarUrl != null && avatarUrl!.isNotEmpty
+                                      ? NetworkImage(
+                                          "http://192.168.1.101:5000$avatarUrl",
                                         )
-                                        as ImageProvider,
+                                      : const NetworkImage(
+                                          "https://i.pravatar.cc/150",
+                                        ),
                             ),
                           ),
-
-                          const SizedBox(height: 10),
-
-                          const Text(
+                          const SizedBox(height: 8),
+                          Text(
                             "Change Avatar",
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: colors.primary.withOpacity(0.7),
+                              fontSize: 13,
+                            ),
                           ),
+                          const SizedBox(height: 20),
+                          buildProfileInfo(),
                         ],
-                      ),
-                    ],
-                  );
-                },
+                      );
+                    }
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: buildProfileInfo()),
+                        const SizedBox(width: 20),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: isEditing ? pickImage : null,
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundImage: avatar != null
+                                    ? FileImage(avatar!)
+                                    : const NetworkImage(
+                                        "https://i.pravatar.cc/150",
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Change Avatar",
+                              style: TextStyle(
+                                color: colors.primary.withOpacity(0.7),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-            /// STAT CARD
-            Container(
-              padding: const EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
+            // STAT CARD
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 10),
-                ],
               ),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  const Text(
-                    "Statistics",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text(
-                        "Today Pomodoro",
-                        style: TextStyle(fontSize: 16),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Statistics",
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurface,
                       ),
+                    ),
+                    const SizedBox(height: 16),
 
-                      Text(
-                        "🍅 $todayPomo",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    // Hôm nay
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Today Pomodoro",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurface.withOpacity(0.8),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        Text(
+                          "🍅 $todayPomo",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
 
-                  const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Focus Time",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurface.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          focusTime(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text("Focus Time"),
-
-                      Text(
-                        focusTime(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Divider(),
-
-                  const SizedBox(height: 10),
-
-                  buildWeekTable(),
-                ],
+                    // Bảng tuần theo hàng dọc (mỗi ngày 1 hàng)
+                    buildWeekList(),
+                  ],
+                ),
               ),
             ),
           ],

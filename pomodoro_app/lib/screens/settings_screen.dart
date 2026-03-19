@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
-
   static bool vibration = true;
   static bool sound = true;
   static bool notification = true;
@@ -16,7 +18,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-
   late TextEditingController pomoController;
   late TextEditingController shortController;
   late TextEditingController longController;
@@ -31,9 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     loadSettings();
   }
 
-  /// LOAD SETTINGS
   Future loadSettings() async {
-
     final prefs = await SharedPreferences.getInstance();
 
     vibration = prefs.getBool("vibration") ?? true;
@@ -55,9 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
-  /// SAVE SETTINGS
   Future saveSettings() async {
-
     final prefs = await SharedPreferences.getInstance();
 
     int pomo = int.tryParse(pomoController.text) ?? 25;
@@ -84,206 +81,188 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget toggleItem(String title, bool value, Function(bool) onChanged) {
-
     return Container(
-
       margin: const EdgeInsets.only(bottom: 16),
-
       padding: const EdgeInsets.all(18),
-
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10
-          )
-        ]
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
-
       child: Row(
-
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
         children: [
-
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-
           Switch(
             value: value,
-            onChanged: (v){
+            onChanged: (v) {
               onChanged(v);
             },
           )
-
         ],
-
       ),
-
     );
-
   }
 
   Widget timeField(String label, IconData icon, TextEditingController controller) {
-
     return Container(
-
       margin: const EdgeInsets.only(bottom: 16),
-
       padding: const EdgeInsets.all(16),
-
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10
-          )
-        ]
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
-
       child: TextField(
-
         controller: controller,
         keyboardType: TextInputType.number,
-
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12)
-          )
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-
       ),
-
     );
+  }
 
+  Widget themePicker(ThemeProvider provider) {
+    final themeList = AppTheme.values;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Theme Color",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            children: themeList.map((t) {
+              Color color;
+              switch (t) {
+                case AppTheme.red:
+                  color = Colors.red;
+                  break;
+                case AppTheme.blue:
+                  color = Colors.blue;
+                  break;
+                case AppTheme.green:
+                  color = Colors.green;
+                  break;
+                case AppTheme.purple:
+                  color = Colors.purple;
+                  break;
+                case AppTheme.orange:
+                  color = Colors.orange;
+                  break;
+              }
+              return GestureDetector(
+                onTap: () {
+                  provider.setTheme(t);
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: provider.theme == t
+                        ? Border.all(width: 3, color: Colors.black)
+                        : null,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-
     if (!mounted || pomoController == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    return Scaffold(
+    // Bao toàn bộ trong Consumer để rebuild khi theme đổi
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Settings"),
+            centerTitle: true,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                /// TIME SETTINGS
+                timeField("Pomodoro Minutes", Icons.timer, pomoController),
+                timeField("Short Break Minutes", Icons.free_breakfast, shortController),
+                timeField("Long Break Minutes", Icons.hotel, longController),
 
-      backgroundColor: const Color(0xFFF5F7FB),
+                const SizedBox(height: 20),
 
-      appBar: AppBar(
-        title: const Text("Settings"),
-        centerTitle: true,
-      ),
+                /// SOUND
+                toggleItem("Sound", sound, (v) {
+                  setState(() {
+                    sound = v;
+                  });
+                }),
 
-      body: SingleChildScrollView(
+                /// VIBRATION
+                toggleItem("Vibration", vibration, (v) {
+                  setState(() {
+                    vibration = v;
+                  });
+                }),
 
-        padding: const EdgeInsets.all(20),
+                /// NOTIFICATION
+                toggleItem("Notification", notification, (v) {
+                  setState(() {
+                    notification = v;
+                  });
+                }),
 
-        child: Column(
+                const SizedBox(height: 20),
 
-          children: [
+                /// THEME PICKER
+                themePicker(themeProvider),
 
-            /// TIME SETTINGS
-            timeField(
-              "Pomodoro Minutes",
-              Icons.timer,
-              pomoController,
-            ),
+                const SizedBox(height: 20),
 
-            timeField(
-              "Short Break Minutes",
-              Icons.free_breakfast,
-              shortController,
-            ),
-
-            timeField(
-              "Long Break Minutes",
-              Icons.hotel,
-              longController,
-            ),
-
-            const SizedBox(height:20),
-
-            /// SOUND
-            toggleItem(
-              "Sound",
-              sound,
-              (v){
-                setState(() {
-                  sound = v;
-                });
-              },
-            ),
-
-            /// VIBRATION
-            toggleItem(
-              "Vibration",
-              vibration,
-              (v){
-                setState(() {
-                  vibration = v;
-                });
-              },
-            ),
-
-            /// NOTIFICATION
-            toggleItem(
-              "Notification",
-              notification,
-              (v){
-                setState(() {
-                  notification = v;
-                });
-              },
-            ),
-
-            const SizedBox(height:20),
-
-            /// SAVE BUTTON
-            SizedBox(
-
-              width: double.infinity,
-
-              child: ElevatedButton(
-
-                onPressed: saveSettings,
-
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical:16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)
-                  )
+                /// SAVE BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: saveSettings,
+                    style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    child: const Text(
+                      "Save Settings",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
                 ),
-
-                child: const Text(
-                  "Save Settings",
-                  style: TextStyle(fontSize:16),
-                ),
-
-              ),
-
+              ],
             ),
-
-          ],
-
-        ),
-
-      ),
-
+          ),
+        );
+      },
     );
-
   }
-
 }
