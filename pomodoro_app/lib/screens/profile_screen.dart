@@ -153,31 +153,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: InputDecoration(
             labelText: "Full Name",
             hintText: "Enter your name",
-            labelStyle: TextStyle(
-              color: colors.onSurface.withOpacity(0.7),
-            ),
-            prefixIcon: Icon(
-              Icons.person,
-              color: colors.primary,
-            ),
+            labelStyle: TextStyle(color: colors.onSurface.withOpacity(0.7)),
+            prefixIcon: Icon(Icons.person, color: colors.primary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: colors.primary.withOpacity(0.2),
-              ),
+              borderSide: BorderSide(color: colors.primary.withOpacity(0.2)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: colors.primary.withOpacity(0.2),
-              ),
+              borderSide: BorderSide(color: colors.primary.withOpacity(0.2)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: colors.primary,
-                width: 2,
-              ),
+              borderSide: BorderSide(color: colors.primary, width: 2),
             ),
           ),
           style: const TextStyle(fontSize: 15),
@@ -215,7 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     "Male",
                     style: TextStyle(
-                      color: gender == "male" ? colors.onSurface : Colors.grey[600],
+                      color: gender == "male"
+                          ? colors.onSurface
+                          : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -240,7 +230,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     "Female",
                     style: TextStyle(
-                      color: gender == "female" ? colors.onSurface : Colors.grey[600],
+                      color: gender == "female"
+                          ? colors.onSurface
+                          : Colors.grey[600],
                     ),
                   ),
                 ],
@@ -343,15 +335,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onTap: isEditing ? pickImage : null,
                             child: CircleAvatar(
                               radius: 50,
-                              backgroundImage: avatar != null
-                                  ? FileImage(avatar!)
-                                  : avatarUrl != null && avatarUrl!.isNotEmpty
-                                      ? NetworkImage(
-                                          "http://138.252.133.79:5000$avatarUrl",
-                                        )
-                                      : const NetworkImage(
-                                          "https://i.pravatar.cc/150",
-                                        ),
+                              backgroundColor: Colors.grey[200],
+                              child: ClipOval(
+                                child: avatar != null
+                                    ? Image.file(
+                                        avatar!,
+                                        fit: BoxFit.cover,
+                                        width: 100,
+                                        height: 100,
+                                      )
+                                    : (avatarUrl != null &&
+                                              avatarUrl!.isNotEmpty
+                                          ? Image.network(
+                                              "http://138.252.133.79:5000$avatarUrl",
+                                              fit: BoxFit.cover,
+                                              width: 100,
+                                              height: 100,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    print(
+                                                      "Image load error: $error",
+                                                    );
+                                                    return Icon(
+                                                      Icons.error,
+                                                      size: 50,
+                                                    );
+                                                  },
+                                            )
+                                          : Image.network(
+                                              "https://i.pravatar.cc/150",
+                                              fit: BoxFit.cover,
+                                              width: 100,
+                                              height: 100,
+                                            )),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
