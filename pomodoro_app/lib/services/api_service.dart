@@ -189,6 +189,64 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  /// WEEK RANK
+  Future getWeekRank() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/pomodoro/week/rank"),
+      headers: await authHeader(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  /// STREAK
+  Future getStreak() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/pomodoro/streak"),
+      headers: await authHeader(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  /// ADMIN
+  Future<List> getAdminUsersReport() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/users"),
+      headers: await authHeader(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  Future<List> getAdminLeaderboard() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/leaderboard"),
+      headers: await authHeader(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  Future deleteAdminUser(String userId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/admin/users/$userId"),
+      headers: await authHeader(),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  Future updateAdminUserRole(String userId, String role) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/admin/users/$userId/role"),
+      headers: await authHeader(),
+      body: jsonEncode({"role": role}),
+    );
+
+    return jsonDecode(response.body);
+  }
+
   Future getProfile() async {
 
   final response = await http.get(
@@ -258,7 +316,7 @@ Future<List> getNotes() async {
 }
 
 /// CREATE NOTE
-Future createNote(String title,String content) async {
+Future createNote(String title,String content,{List<Map<String, dynamic>>? highlights}) async {
 
   final token = await getToken();
 
@@ -270,13 +328,36 @@ Future createNote(String title,String content) async {
     },
     body: jsonEncode({
       "title":title,
-      "content":content
+      "content":content,
+      "highlights": highlights ?? []
     })
   );
 }
 
+Future<Map<String, dynamic>> uploadDocx(String filePath) async {
+  final token = await getToken();
+
+  var request = http.MultipartRequest(
+    "POST",
+    Uri.parse("$baseUrl/notes/upload-docx"),
+  );
+
+  request.headers["Authorization"] = "Bearer $token";
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      "docx",
+      filePath,
+    ),
+  );
+
+  var streamedResponse = await request.send();
+  var response = await http.Response.fromStream(streamedResponse);
+  return jsonDecode(response.body);
+}
+
 /// UPDATE NOTE
-Future updateNote(String id,String title,String content) async {
+Future updateNote(String id,String title,String content,{List<Map<String, dynamic>>? highlights}) async {
 
   final token = await getToken();
 
@@ -288,7 +369,8 @@ Future updateNote(String id,String title,String content) async {
     },
     body: jsonEncode({
       "title":title,
-      "content":content
+      "content":content,
+      "highlights": highlights ?? []
     })
   );
 }

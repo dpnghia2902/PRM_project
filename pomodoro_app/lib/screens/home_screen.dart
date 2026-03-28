@@ -4,6 +4,7 @@ import 'task_screen.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'notes_screen.dart';
+import 'admin/admin_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
@@ -15,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService api = ApiService();
   String? avatar;
+  String role = "user";
 
   @override
   void initState() {
@@ -27,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
       var data = await api.getProfile();
       setState(() {
         avatar = data["avatar"];
+        role = data["role"] ?? "user";
       });
     } catch (e) {
       print(e);
@@ -184,6 +187,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+                if (role == "admin")
+                  buildButton(
+                    icon: Icons.admin_panel_settings,
+                    title: "Admin",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminScreen()),
+                      );
+                    },
+                  ),
               ],
             ),
           ),

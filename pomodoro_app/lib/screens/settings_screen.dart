@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/theme_provider.dart';
-import 'package:provider/provider.dart';
+import '../screens/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   static bool vibration = true;
@@ -78,6 +78,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     SettingsScreen.notification = notification;
 
     Navigator.pop(context);
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
+    );
   }
 
   Widget toggleItem(String title, bool value, Function(bool) onChanged) {
@@ -255,6 +265,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Text(
                       "Save Settings",
                       style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                /// LOGOUT BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: logout,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.redAccent),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(fontSize: 16, color: Colors.redAccent),
                     ),
                   ),
                 ),

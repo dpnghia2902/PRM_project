@@ -21,7 +21,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   int todayPomo = 0;
   int focusMinutes = 0;
+  int weekRank = 0;
+  int weekTotalDuration = 0;
+  int weekTotalPomodoro = 0;
+  List<Map<String, dynamic>> leaderboard = [];
   List<int> weekStats = [0, 0, 0, 0, 0, 0, 0];
+  int streak = 0;
 
   final picker = ImagePicker();
 
@@ -52,10 +57,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       var today = await api.getTodayStats();
       var week = await api.getWeekStats();
+      var rank = await api.getWeekRank();
+      var streakData = await api.getStreak();
 
       setState(() {
         todayPomo = today["totalPomodoro"] ?? 0;
         focusMinutes = today["focusMinutes"] ?? 0;
+        weekRank = rank["weekRank"] ?? 0;
+        weekTotalDuration = rank["weekTotalDuration"] ?? 0;
+        weekTotalPomodoro = rank["weekTotalPomodoro"] ?? 0;
+        leaderboard = List<Map<String, dynamic>>.from(rank["leaderboard"] ?? []);
+        streak = streakData["streak"] ?? 0;
 
         List data = week["week"] ?? [0, 0, 0, 0, 0, 0, 0];
         weekStats = [
@@ -465,6 +477,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Weekly rank",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurface.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          weekRank > 0
+                              ? "#${weekRank} (${weekTotalPomodoro} pomodoro / ${weekTotalDuration} min)"
+                              : "No rank yet",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Current Streak",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.onSurface.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          "$streak days",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -488,6 +544,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     const Divider(height: 1),
                     const SizedBox(height: 10),
+
+                    if (leaderboard.isNotEmpty) ...[
+                      Text(
+                        "Weekly Leaderboard",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        children: List.generate(
+                          leaderboard.length,
+                          (index) {
+                            final item = leaderboard[index];
+                            return ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: colors.primary.withOpacity(0.2),
+                                child: Text("${item['rank']}"),
+                              ),
+                              title: Text(item['fullName'] ?? "Unknown"),
+                              trailing: Text("🍅 ${item['totalPomodoro'] ?? 0}"),
+                            );
+                          },
+                        ),
+                      ),
+                      const Divider(height: 24),
+                    ],
 
                     // Bảng tuần theo hàng dọc (mỗi ngày 1 hàng)
                     buildWeekList(),

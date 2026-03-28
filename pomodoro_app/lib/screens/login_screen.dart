@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
+import 'admin/admin_screen.dart';
 import 'register_screen.dart';
 import '../providers/theme_provider.dart';
 
@@ -54,10 +55,18 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (res["token"] != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => HomeScreen()),
-        );
+        final role = res["user"]?['role'] ?? 'user';
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => HomeScreen()),
+          );
+        }
       } else {
         setState(() {
           errorMessage = res["message"] ?? "Sai email hoặc mật khẩu";

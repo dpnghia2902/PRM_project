@@ -53,27 +53,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: List.generate(_pages.length, (index) => _buildDot(index)),
                 ),
                 const SizedBox(height: 40),
-                if (_currentPage == _pages.length - 1)
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 40),
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeProvider.getThemeData().primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        elevation: 8,
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 40),
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: themeProvider.getThemeData().primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
                       ),
-                      onPressed: _completeOnboarding,
-                      child: const Text(
-                        'BẮT ĐẦU NGAY!',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
+                      elevation: 8,
+                    ),
+                    onPressed: _currentPage == _pages.length - 1
+                        ? _completeOnboarding
+                        : () {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                    child: Text(
+                      _currentPage == _pages.length - 1 ? 'BẮT ĐẦU NGAY!' : 'TIẾP THEO',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
+                ),
               ],
             ),
           ),
