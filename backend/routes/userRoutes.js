@@ -11,32 +11,21 @@ router.get("/profile", auth, userController.getProfile);
 router.put("/profile", auth, userController.updateProfile);
 
 /* upload avatar */
-router.put("/:id/avatar", auth, upload.single("avatar"), async (req, res) => {
+router.put("/:id/avatar", upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // đường dẫn public
     const avatarPath = `/uploads/${req.file.filename}`;
 
-    // update user avatar
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { avatar: avatarPath },
-      { new: true } // trả user mới
+      { new: true }
     );
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // trả JSON chuẩn cho Flutter
-    res.json({
-      message: "Avatar uploaded successfully",
-      avatar: avatarPath,
-      userId: user._id,
-    });
+    res.json(user);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Upload avatar failed" });

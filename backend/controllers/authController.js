@@ -6,7 +6,7 @@ exports.register = async (req, res) => {
 
   try{
 
-    const { fullName, email, password, gender } = req.body;
+    const { fullName, email, password, gender, role } = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -16,11 +16,14 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const userRole = role === "admin" ? "admin" : "user";
+
     const user = await User.create({
       fullName,
       email,
       password: hashedPassword,
-      gender
+      gender,
+      role: userRole
     });
 
     res.json({
@@ -50,7 +53,7 @@ exports.login = async (req, res) => {
     return res.status(400).json({ message: "Wrong password" });
 
   const token = jwt.sign(
-    { id: user._id },
+    { id: user._id, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );

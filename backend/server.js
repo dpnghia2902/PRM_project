@@ -18,6 +18,7 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/pomodoro", require("./routes/pomodoroRoutes"));
 app.use("/api/tasks", require("./routes/taskRoutes"));
 app.use("/api/notes", require("./routes/noteRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
 
 /* serve uploads folder */
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
